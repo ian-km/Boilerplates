@@ -1,0 +1,43 @@
+---
+
+- hosts: servers
+  become: true
+  tasks:
+
+  - name: Update repository index
+    apt:
+      update_cache: yes
+    when: ansible_distribution in ["Debian", "Ubuntu"]
+
+  - name: Install required system packages
+    apt: name={{ item }} state=latest update_cache=yes
+    loop: [ 'ca-certificates', 'curl', 'gnupg', 'lsb-release']
+
+  - name: Add Docker GPG apt Key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add Docker Repository
+    apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu focal stable
+      state: present
+
+  - name: Update apt 
+    apt: 
+      update_cache=yes 
+
+  - name: Install docker-ce
+    apt: name={{ item }} state=latest
+    loop: [ 'docker-ce', 'docker-ce-cli', 'containerd.io']
+
+  - name: Add user to docker group
+    user:
+      name: super
+      group: docker
+      append: yes
+
+  - name: Install docker-compose
+    apt:
+      name: docker-compose
+      state: present
